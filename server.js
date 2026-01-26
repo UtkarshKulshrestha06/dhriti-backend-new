@@ -119,4 +119,8 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log("Environment Check:");
+  console.log("- SUPABASE_URL:", process.env.SUPABASE_URL ? "✅ Set" : "❌ Missing");
+  console.log("- SUPABASE_KEY:", process.env.SUPABASE_KEY ? "✅ Set" : "❌ Missing");
+  console.log("- JWT_SECRET:", process.env.JWT_SECRET ? "✅ Set" : "❌ Missing");
 });
