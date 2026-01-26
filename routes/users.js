@@ -7,7 +7,7 @@ const { requireAuth, requireAdmin } = require("../middleware/auth");
  * GET /users
  * Admin: list all users
  */
-router.get("/", requireAuth, adminOnly, async (req, res) => {
+router.get("/", requireAuth, requireAdmin, async (req, res) => {
   const { data, error } = await supabase
     .from("users")
     .select("*")
