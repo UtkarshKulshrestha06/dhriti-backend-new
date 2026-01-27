@@ -22,6 +22,7 @@ const timetableRoutes = require("./routes/timetable");
 
 const authRoutes = require("./routes/auth");
 const usersRoutes = require("./routes/users");
+const enrollmentsRoutes = require("./routes/enrollments");
 
 // CORE
 const supabase = require("./supabaseClient");
@@ -48,6 +49,7 @@ app.get("/", (req, res) => {
 // =======================
 app.use("/auth", authRoutes);
 app.use("/users", usersRoutes);
+app.use("/enrollments", enrollmentsRoutes);
 
 // =======================
 // STATIC DATA (READ-ONLY)
