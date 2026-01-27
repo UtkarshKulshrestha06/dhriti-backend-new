@@ -90,6 +90,7 @@ router.put("/:id", requireAuth, requireAdmin, async (req, res) => {
   if (req.body.subject !== undefined) updateData.subject = req.body.subject;
   if (req.body.role !== undefined) updateData.role = req.body.role;
 
+  // 1. Update Profile in public.users
   const { error } = await supabase
     .from("users")
     .update(updateData)
@@ -97,6 +98,24 @@ router.put("/:id", requireAuth, requireAdmin, async (req, res) => {
 
   if (error) {
     return res.status(500).json({ error: error.message });
+  }
+
+  // 2. Sync to Auth Metadata
+  // This ensures that when the user logs in (or refreshes session), 
+  // they get the updated first_name, last_name, etc.
+  const { error: authError } = await supabase.auth.admin.updateUserById(id, {
+    user_metadata: {
+      first_name: updateData.first_name,
+      last_name: updateData.last_name,
+      phone: updateData.phone,
+      role: updateData.role,
+      subject: updateData.subject
+    }
+  });
+
+  if (authError) {
+    console.error("Warning: Could not sync auth metadata:", authError.message);
+    // We don't return error here because the main DB update was successful
   }
 
   res.json({ success: true });
