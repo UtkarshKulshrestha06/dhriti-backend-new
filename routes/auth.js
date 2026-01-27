@@ -31,7 +31,7 @@ router.post("/login", async (req, res) => {
 
     const userId = data.user.id;
 
-    // 2️⃣ Fetch application role from users table
+    // 2️⃣ Fetch application profile and enrolled batches
     const { data: profile, error: profileError } = await supabase
       .from("users")
       .select("role, first_name, last_name")
@@ -44,6 +44,14 @@ router.post("/login", async (req, res) => {
       });
     }
 
+    // Fetch enrolled batches
+    const { data: enrollments } = await supabase
+      .from("enrollments")
+      .select("batch_id")
+      .eq("user_id", userId);
+
+    const subscribedBatchIds = enrollments ? enrollments.map(e => e.batch_id) : [];
+
     // 3️⃣ Return clean response to frontend
     res.json({
       token: data.session.access_token,
@@ -52,7 +60,8 @@ router.post("/login", async (req, res) => {
         email: data.user.email,
         role: profile.role, // ADMIN / TEACHER / STUDENT
         first_name: profile.first_name || null,
-        last_name: profile.last_name || null
+        last_name: profile.last_name || null,
+        subscribedBatchIds
       }
     });
 

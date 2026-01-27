@@ -66,8 +66,26 @@ app.use("/resources", resourcesRoutes);
 // =======================
 // AUTH TEST ROUTE
 // =======================
-app.get("/me", requireAuth, (req, res) => {
-  res.json(req.user);
+app.get("/me", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Fetch enrolled batches
+    const { data: enrollments } = await supabase
+      .from("enrollments")
+      .select("batch_id")
+      .eq("user_id", userId);
+
+    const subscribedBatchIds = enrollments ? enrollments.map(e => e.batch_id) : [];
+
+    res.json({
+      ...req.user,
+      subscribedBatchIds
+    });
+  } catch (err) {
+    console.error("ME ERROR:", err);
+    res.status(500).json({ error: "Failed to fetch profile" });
+  }
 });
 
 app.use("/inquiries", inquiriesRoutes);

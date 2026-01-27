@@ -92,8 +92,16 @@ router.post(
       });
 
     } catch (err) {
-      console.error("UPLOAD ERROR:", err);
-      res.status(500).json({ error: "Upload failed" });
+      console.error("UPLOAD CRITICAL ERROR:", err);
+      if (err?.message) console.error("Error Message:", err.message);
+      if (err?.code) console.error("Error Code:", err.code);
+      // Check for Supabase specific structure
+      if (err?.error) console.error("Supabase Error:", err.error);
+
+      res.status(500).json({
+        error: "Upload failed",
+        details: err.message || "Unknown server error"
+      });
     }
   }
 );
