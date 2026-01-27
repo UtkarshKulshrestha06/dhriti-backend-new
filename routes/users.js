@@ -34,7 +34,9 @@ router.post("/", requireAuth, requireAdmin, async (req, res) => {
     email,
     password,
     role,
+    firstName,
     first_name,
+    lastName,
     last_name,
     phone,
     subject
@@ -46,10 +48,6 @@ router.post("/", requireAuth, requireAdmin, async (req, res) => {
     });
   }
 
-  // 🚫 Safety: never allow these fields through
-  delete req.body.full_name;
-  delete req.body.name;
-
   // 1. Create auth user with metadata
   const { data: authData, error: authError } =
     await supabase.auth.admin.createUser({
@@ -57,8 +55,8 @@ router.post("/", requireAuth, requireAdmin, async (req, res) => {
       password,
       email_confirm: true,
       user_metadata: {
-        first_name: first_name || null,
-        last_name: last_name || null,
+        first_name: first_name || firstName || null,
+        last_name: last_name || lastName || null,
         phone: phone || null,
         role,
         subject: subject || null
@@ -82,15 +80,19 @@ router.post("/", requireAuth, requireAdmin, async (req, res) => {
 router.put("/:id", requireAuth, requireAdmin, async (req, res) => {
   const { id } = req.params;
 
-  // 🚫 Never allow these fields to be updated
-  delete req.body.full_name;
-  delete req.body.email;
-  delete req.body.password;
-  delete req.body.id;
+  // Map camelCase to snake_case for Supabase
+  const updateData = {};
+  if (req.body.firstName !== undefined || req.body.first_name !== undefined)
+    updateData.first_name = req.body.first_name || req.body.firstName;
+  if (req.body.lastName !== undefined || req.body.last_name !== undefined)
+    updateData.last_name = req.body.last_name || req.body.lastName;
+  if (req.body.phone !== undefined) updateData.phone = req.body.phone;
+  if (req.body.subject !== undefined) updateData.subject = req.body.subject;
+  if (req.body.role !== undefined) updateData.role = req.body.role;
 
   const { error } = await supabase
     .from("users")
-    .update(req.body)
+    .update(updateData)
     .eq("id", id);
 
   if (error) {
