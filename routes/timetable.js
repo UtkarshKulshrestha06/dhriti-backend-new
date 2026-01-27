@@ -17,7 +17,7 @@ router.get("/", requireAuth, async (req, res) => {
         .from("timetable")
         .select("*")
         .eq("batch_id", batch)
-        .order("day_of_week", { ascending: true })
+        .order("date", { ascending: true })
         .order("start_time", { ascending: true });
 
     if (error) {
@@ -50,6 +50,7 @@ router.put("/:batchId", requireAuth, requireTeacher, async (req, res) => {
 
     const formattedItems = items.map(item => ({
         batch_id: batchId,
+        date: item.date || new Date().toISOString().split('T')[0],
         day_of_week: item.day_of_week,
         start_time: item.start_time,
         end_time: item.end_time,
