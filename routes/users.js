@@ -101,21 +101,27 @@ router.put("/:id", requireAuth, requireAdmin, async (req, res) => {
   }
 
   // 2. Sync to Auth Metadata
-  // This ensures that when the user logs in (or refreshes session), 
-  // they get the updated first_name, last_name, etc.
-  const { error: authError } = await supabase.auth.admin.updateUserById(id, {
-    user_metadata: {
-      first_name: updateData.first_name,
-      last_name: updateData.last_name,
-      phone: updateData.phone,
-      role: updateData.role,
-      subject: updateData.subject
-    }
-  });
+  // We fetch existing metadata first to prevent wiping fields NOT sent in this request
+  const { data: userData, error: fetchError } = await supabase.auth.admin.getUserById(id);
 
-  if (authError) {
-    console.error("Warning: Could not sync auth metadata:", authError.message);
-    // We don't return error here because the main DB update was successful
+  if (!fetchError && userData?.user) {
+    const existingMeta = userData.user.user_metadata || {};
+    const newMeta = {
+      ...existingMeta,
+      first_name: updateData.first_name !== undefined ? updateData.first_name : existingMeta.first_name,
+      last_name: updateData.last_name !== undefined ? updateData.last_name : existingMeta.last_name,
+      phone: updateData.phone !== undefined ? updateData.phone : existingMeta.phone,
+      role: updateData.role !== undefined ? updateData.role : existingMeta.role,
+      subject: updateData.subject !== undefined ? updateData.subject : existingMeta.subject
+    };
+
+    const { error: authError } = await supabase.auth.admin.updateUserById(id, {
+      user_metadata: newMeta
+    });
+
+    if (authError) {
+      console.error("Warning: Could not sync auth metadata:", authError.message);
+    }
   }
 
   res.json({ success: true });
