@@ -28,6 +28,34 @@ router.get("/:userId", requireAuth, async (req, res) => {
 });
 
 /**
+ * GET /enrollments/batch/:batchId
+ * List all users enrolled in a specific batch
+ */
+router.get("/batch/:batchId", requireAuth, requireTeacher, async (req, res) => {
+    const { batchId } = req.params;
+
+    const { data, error } = await supabase
+        .from("enrollments")
+        .select(`
+            enrolled_at,
+            user:users(*)
+        `)
+        .eq("batch_id", batchId);
+
+    if (error) {
+        return res.status(500).json({ error: error.message });
+    }
+
+    // Flatten for easier frontend consumption
+    const users = data.map(dim => ({
+        ...dim.user,
+        enrolled_at: dim.enrolled_at
+    }));
+
+    res.json(users);
+});
+
+/**
  * POST /enrollments
  * Admin: Enroll a user in a batch
  */
