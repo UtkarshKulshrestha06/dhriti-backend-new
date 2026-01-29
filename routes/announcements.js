@@ -15,7 +15,7 @@ router.get("/", requireAuth, async (req, res) => {
 
     const { data, error } = await supabase
         .from("announcements")
-        .select("*")
+        .select("*, users:author_id(first_name, last_name)")
         .eq("batch_id", batch)
         .order("created_at", { ascending: false });
 
